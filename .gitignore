@@ -1,0 +1,26 @@
+# .gitignore
+
+# environment
+.venv/
+venv/
+__pycache__/
+*.pyc
+*.pyo
+.env
+
+# python
+*.egg-info/
+dist/
+build/
+
+# editor
+.vscode/
+.idea/
+
+# os
+.DS_Store
+Thumbs.db
+
+# temp files
+*.tmp
+*.log
