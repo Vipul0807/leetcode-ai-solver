@@ -5,7 +5,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from graph import graph
 from state import AgentState
-
+import requests
 
 # ── app setup ────────────────────────────────────
 app = FastAPI(
@@ -161,4 +161,147 @@ def get_problem(url: str):
         raise HTTPException(
             status_code = 500,
             detail      = f"Could not fetch problem: {str(e)}"
+        )
+
+
+# add to backend/main.py
+
+from github_pusher import push_solution
+
+
+# ── push request model ────────────────────────────
+class PushRequest(BaseModel):
+    token      : str
+    username   : str
+    slug       : str
+    title      : str
+    difficulty : str = "Unknown"
+    description: str = ""
+    examples   : list = []
+    code       : str
+    language   : str
+    attempts   : int = 0
+
+
+# ── push endpoint ─────────────────────────────────
+# @app.post("/push")
+# def push_to_github(request: PushRequest):
+#     print(f"\n📤 PUSH — {request.title} → {request.username}")
+
+#     if not request.token:
+#         raise HTTPException(
+#             status_code = 400,
+#             detail      = "GitHub token is required"
+#         )
+
+#     if not request.username:
+#         raise HTTPException(
+#             status_code = 400,
+#             detail      = "GitHub username is required"
+#         )
+
+#     result = push_solution(
+#         token       = request.token,
+#         username    = request.username,
+#         slug        = request.slug,
+#         title       = request.title,
+#         difficulty  = request.difficulty,
+#         description = request.description,
+#         examples    = request.examples,
+#         code        = request.code,
+#         language    = request.language,
+#         attempts    = request.attempts
+#     )
+
+#     if result["success"]:
+#         return result
+#     else:
+#         raise HTTPException(
+#             status_code = 500,
+#             detail      = result["message"]
+#         )
+
+
+# backend/main.py — update push endpoint
+
+@app.post("/push")
+def push_to_github(request: PushRequest):
+    print(f"\n📤 PUSH — {request.title} → {request.username}")
+
+    if not request.token:
+        raise HTTPException(status_code=400, detail="GitHub token required")
+
+    if not request.username:
+        raise HTTPException(status_code=400, detail="GitHub username required")
+
+    try:
+        # ✅ fetch fresh description from LeetCode if slug provided
+        description = request.description
+        if not description and request.slug:
+            try:
+                from scraper import fetch_problem
+                url  = f"https://leetcode.com/problems/{request.slug}/"
+                data = fetch_problem(url)
+                description = data.get("description", "")
+            except Exception as e:
+                print(f"⚠️ Could not fetch description: {e}")
+                description = ""
+
+        result = push_solution(
+            token       = request.token,
+            username    = request.username,
+            slug        = request.slug,
+            title       = request.title,
+            difficulty  = request.difficulty,
+            description = description,       # ✅ use fetched description
+            examples    = request.examples,
+            code        = request.code,
+            language    = request.language,
+            attempts    = request.attempts
+        )
+
+        if result["success"]:
+            return result
+        else:
+            raise HTTPException(status_code=500, detail=result["message"])
+
+    except HTTPException:
+        raise
+
+    except Exception as e:
+        print(f"🔴 SERVER ERROR: {e}")
+        raise HTTPException(status_code=500, detail=f"Server error: {str(e)}")
+
+# ── verify github token ───────────────────────────
+@app.post("/verify-github")
+def verify_github(payload: dict):
+    token    = payload.get("token", "")
+    username = payload.get("username", "")
+
+    if not token or not username:
+        raise HTTPException(
+            status_code = 400,
+            detail      = "Token and username required"
+        )
+
+    res = requests.get(
+        "https://api.github.com/user",
+        headers = {
+            "Authorization" : f"token {token}",
+            "Accept"        : "application/vnd.github.v3+json"
+        }
+    )
+
+    if res.status_code == 200:
+        data = res.json()
+        return {
+            "valid"    : True,
+            "username" : data.get("login"),
+            "name"     : data.get("name"),
+            "avatar"   : data.get("avatar_url")
+        }
+    else:
+        raise HTTPException(
+            status_code = 401,
+            detail      = "Invalid GitHub token"
         )

@@ -5,29 +5,50 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>LeetCode AI Solver</title>
 <style>
+
+  /* ── reset ── */
   * { margin:0; padding:0; box-sizing:border-box; }
 
+  /* ── root ── */
   body {
-    width       : 380px;
-    min-height  : 500px;
-    background  : #0f1117;
-    color       : #e2e8f0;
-    font-family : 'JetBrains Mono', 'Courier New', monospace;
-    font-size   : 13px;
+    width      : 380px;
+    min-height : 500px;
+    background : #0f1117;
+    color      : #e2e8f0;
+    font-family: 'JetBrains Mono', 'Courier New', monospace;
+    font-size  : 13px;
   }
 
+  /* ── header ── */
   .header {
-    background    : #1a1d2e;
-    border-bottom : 1px solid #2a2d3e;
-    padding       : 14px 16px;
-    display       : flex;
-    align-items   : center;
+    background     : #1a1d2e;
+    border-bottom  : 1px solid #2a2d3e;
+    padding        : 14px 16px;
+    display        : flex;
+    align-items    : center;
     justify-content: space-between;
   }
 
-  .header-left { display:flex; align-items:center; gap:8px; }
-  .logo        { font-size:18px; }
-  .title       { font-size:13px; font-weight:700; color:#00d4ff; letter-spacing:1px; }
+  .header-left {
+    display    : flex;
+    align-items: center;
+    gap        : 8px;
+  }
+
+  .header-right {
+    display    : flex;
+    align-items: center;
+    gap        : 8px;
+  }
+
+  .logo  { font-size:18px; }
+
+  .title {
+    font-size     : 13px;
+    font-weight   : 700;
+    color         : #00d4ff;
+    letter-spacing: 1px;
+  }
 
   .status-dot {
     width        : 8px;
@@ -37,152 +58,189 @@
     animation    : pulse 2s infinite;
   }
 
+  .settings-btn {
+    background : transparent;
+    border     : 1px solid #2a2d3e;
+    color      : #64748b;
+    font-size  : 13px;
+    padding    : 3px 8px;
+    cursor     : pointer;
+    font-family: monospace;
+    transition : all 0.15s;
+  }
+
+  .settings-btn:hover {
+    border-color: #00d4ff;
+    color       : #00d4ff;
+  }
+
+  /* ── animations ── */
   @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
   @keyframes spin  { to{transform:rotate(360deg)} }
 
+  /* ── problem bar ── */
   .problem-bar {
-    background    : #111827;
-    border-bottom : 1px solid #2a2d3e;
-    padding       : 10px 16px;
+    background   : #111827;
+    border-bottom: 1px solid #2a2d3e;
+    padding      : 10px 16px;
   }
 
   .problem-title {
-    font-size     : 12px;
-    font-weight   : 700;
-    color         : #fff;
-    margin-bottom : 4px;
-    white-space   : nowrap;
-    overflow      : hidden;
-    text-overflow : ellipsis;
+    font-size    : 12px;
+    font-weight  : 700;
+    color        : #fff;
+    margin-bottom: 4px;
+    white-space  : nowrap;
+    overflow     : hidden;
+    text-overflow: ellipsis;
   }
 
-  .problem-meta { display:flex; gap:8px; align-items:center; }
+  .problem-meta {
+    display    : flex;
+    gap        : 8px;
+    align-items: center;
+  }
 
   .badge {
-    font-size      : 9px;
-    padding        : 2px 8px;
-    border         : 1px solid;
-    letter-spacing : 1px;
-    text-transform : uppercase;
+    font-size     : 9px;
+    padding       : 2px 8px;
+    border        : 1px solid;
+    letter-spacing: 1px;
+    text-transform: uppercase;
   }
 
-  .badge.easy   { border-color:#34d399; color:#34d399; }
-  .badge.medium { border-color:#fbbf24; color:#fbbf24; }
-  .badge.hard   { border-color:#f87171; color:#f87171; }
-  .badge.lang   { border-color:#a78bfa; color:#a78bfa; }
+  .badge.easy    { border-color:#34d399; color:#34d399; }
+  .badge.medium  { border-color:#fbbf24; color:#fbbf24; }
+  .badge.hard    { border-color:#f87171; color:#f87171; }
+  .badge.unknown { border-color:#64748b; color:#64748b; }
+  .badge.lang    { border-color:#a78bfa; color:#a78bfa; }
 
+  /* ── not on leetcode ── */
   .not-leetcode {
-    padding    : 20px 16px;
-    text-align : center;
-    color      : #64748b;
+    padding   : 30px 16px;
+    text-align: center;
+    color     : #64748b;
   }
 
-  .not-leetcode .icon { font-size:32px; margin-bottom:10px; }
-  .not-leetcode p     { font-size:11px; line-height:1.6; }
+  .not-leetcode .icon { font-size:36px; margin-bottom:12px; }
 
+  .not-leetcode p {
+    font-size  : 11px;
+    line-height: 1.7;
+    color      : #475569;
+  }
+
+  /* ── body ── */
   .body { padding:16px; }
 
+  /* ── label ── */
   .label {
-    font-size      : 9px;
-    color          : #64748b;
-    letter-spacing : 2px;
-    text-transform : uppercase;
-    margin-bottom  : 6px;
+    font-size     : 9px;
+    color         : #64748b;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    margin-bottom : 6px;
   }
 
-  .lang-row     { display:flex; gap:8px; margin-bottom:16px; }
+  /* ── language row ── */
+  .lang-row {
+    display      : flex;
+    gap          : 8px;
+    margin-bottom: 14px;
+  }
 
   .lang-btn {
-    flex        : 1;
-    padding     : 8px 0;
-    background  : #1a1d2e;
-    border      : 1px solid #2a2d3e;
-    color       : #64748b;
-    font-family : 'JetBrains Mono', monospace;
-    font-size   : 11px;
-    font-weight : 700;
-    cursor      : pointer;
+    flex          : 1;
+    padding       : 8px 0;
+    background    : #1a1d2e;
+    border        : 1px solid #2a2d3e;
+    color         : #64748b;
+    font-family   : 'JetBrains Mono', monospace;
+    font-size     : 11px;
+    font-weight   : 700;
+    cursor        : pointer;
     letter-spacing: 1px;
-    transition  : all 0.15s;
+    transition    : all 0.15s;
   }
 
   .lang-btn:hover  { border-color:#a78bfa; color:#a78bfa; }
-  .lang-btn.active { background:rgba(167,139,250,0.1); border-color:#a78bfa; color:#a78bfa; }
-
-  /* ── error paste area ── */
-  .error-section {
-    margin-bottom : 14px;
+  .lang-btn.active {
+    background  : rgba(167,139,250,0.1);
+    border-color: #a78bfa;
+    color       : #a78bfa;
   }
 
+  /* ── error paste section ── */
+  .error-section { margin-bottom:14px; }
+
   .error-toggle {
-    width          : 100%;
-    padding        : 7px 12px;
-    background     : #1a1d2e;
-    border         : 1px solid #2a2d3e;
-    color          : #64748b;
-    font-family    : 'JetBrains Mono', monospace;
-    font-size      : 10px;
-    cursor         : pointer;
-    text-align     : left;
-    letter-spacing : 1px;
-    margin-bottom  : 6px;
-    transition     : all 0.15s;
+    width         : 100%;
+    padding       : 7px 12px;
+    background    : #1a1d2e;
+    border        : 1px solid #2a2d3e;
+    color         : #64748b;
+    font-family   : 'JetBrains Mono', monospace;
+    font-size     : 10px;
+    cursor        : pointer;
+    text-align    : left;
+    letter-spacing: 1px;
+    margin-bottom : 6px;
+    transition    : all 0.15s;
   }
 
   .error-toggle:hover  { border-color:#f87171; color:#f87171; }
-  .error-toggle.active { border-color:#f87171; color:#f87171; background:rgba(248,113,113,0.06); }
-
-  .error-paste {
-    display  : none;
-    flex-direction: column;
-    gap      : 6px;
+  .error-toggle.active {
+    border-color: #f87171;
+    color       : #f87171;
+    background  : rgba(248,113,113,0.06);
   }
 
-  .error-paste.show { display:flex; }
+  .error-paste         { display:none; flex-direction:column; gap:6px; }
+  .error-paste.show    { display:flex; }
 
   .error-textarea {
-    width       : 100%;
-    height      : 80px;
-    background  : #050810;
-    border      : 1px solid rgba(248,113,113,0.3);
-    color       : #f87171;
-    font-family : 'JetBrains Mono', monospace;
-    font-size   : 9px;
-    padding     : 8px;
-    resize      : vertical;
-    line-height : 1.6;
+    width      : 100%;
+    height     : 80px;
+    background : #050810;
+    border     : 1px solid rgba(248,113,113,0.3);
+    color      : #f87171;
+    font-family: 'JetBrains Mono', monospace;
+    font-size  : 9px;
+    padding    : 8px;
+    resize     : vertical;
+    line-height: 1.6;
   }
 
-  .error-textarea::placeholder { color:#64748b; }
+  .error-textarea::placeholder { color:#2a2d3e; }
 
   .error-hint {
-    font-size  : 9px;
-    color      : #64748b;
-    letter-spacing: 1px;
-    line-height: 1.5;
+    font-size     : 9px;
+    color         : #475569;
+    letter-spacing: 0.5px;
+    line-height   : 1.5;
   }
 
   /* ── solve button ── */
   .solve-btn {
-    width          : 100%;
-    padding        : 12px;
-    background     : linear-gradient(135deg, #00d4ff, #a78bfa);
-    border         : none;
-    color          : #000;
-    font-family    : 'JetBrains Mono', monospace;
-    font-size      : 13px;
-    font-weight    : 700;
-    cursor         : pointer;
-    letter-spacing : 2px;
-    margin-bottom  : 16px;
-    transition     : opacity 0.15s;
+    width         : 100%;
+    padding       : 12px;
+    background    : linear-gradient(135deg, #00d4ff, #a78bfa);
+    border        : none;
+    color         : #000;
+    font-family   : 'JetBrains Mono', monospace;
+    font-size     : 13px;
+    font-weight   : 700;
+    cursor        : pointer;
+    letter-spacing: 2px;
+    margin-bottom : 14px;
+    transition    : opacity 0.15s;
   }
 
   .solve-btn:hover    { opacity:0.85; }
   .solve-btn:disabled { opacity:0.5; cursor:not-allowed; }
 
   /* ── loading ── */
-  .loading      { display:none; text-align:center; padding:20px 0; color:#64748b; }
+  .loading      { display:none; text-align:center; padding:20px 0; }
   .loading.show { display:block; }
 
   .spinner {
@@ -195,17 +253,35 @@
     margin       : 0 auto 10px;
   }
 
-  .loading-step { font-size:10px; letter-spacing:1px; color:#00d4ff; }
+  .loading-step {
+    font-size     : 10px;
+    letter-spacing: 1px;
+    color         : #00d4ff;
+  }
+
+  /* ── error box ── */
+  .err-box {
+    display    : none;
+    background : rgba(248,113,113,0.06);
+    border     : 1px solid rgba(248,113,113,0.3);
+    padding    : 10px 12px;
+    font-size  : 10px;
+    color      : #f87171;
+    line-height: 1.6;
+    margin-bottom: 10px;
+  }
+
+  .err-box.show { display:block; }
 
   /* ── results ── */
   .results      { display:none; }
   .results.show { display:block; }
 
   .result-header {
-    display         : flex;
-    align-items     : center;
-    justify-content : space-between;
-    margin-bottom   : 10px;
+    display        : flex;
+    align-items    : center;
+    justify-content: space-between;
+    margin-bottom  : 10px;
   }
 
   .result-status      { font-size:12px; font-weight:700; }
@@ -213,68 +289,76 @@
   .result-status.fail { color:#f87171; }
 
   .attempts-badge {
-    font-size      : 9px;
-    padding        : 2px 8px;
-    border         : 1px solid #2a2d3e;
-    color          : #64748b;
-    letter-spacing : 1px;
+    font-size     : 9px;
+    padding       : 2px 8px;
+    border        : 1px solid #2a2d3e;
+    color         : #64748b;
+    letter-spacing: 1px;
   }
 
+  /* ── test items ── */
   .tests        { margin-bottom:12px; }
 
   .test-item {
-    display       : flex;
-    align-items   : flex-start;
-    gap           : 8px;
-    padding       : 6px 10px;
-    border        : 1px solid #2a2d3e;
-    margin-bottom : 4px;
-    font-size     : 10px;
+    display      : flex;
+    align-items  : flex-start;
+    gap          : 8px;
+    padding      : 6px 10px;
+    border       : 1px solid #2a2d3e;
+    margin-bottom: 4px;
+    font-size    : 10px;
   }
 
   .test-item.pass { border-color:rgba(52,211,153,0.3); }
   .test-item.fail { border-color:rgba(248,113,113,0.3); }
-  .test-icon      { flex-shrink:0; font-size:11px; }
-  .test-detail    { flex:1; color:#94a3b8; line-height:1.6; }
+
+  .test-icon   { flex-shrink:0; font-size:11px; }
+  .test-detail { flex:1; color:#94a3b8; line-height:1.6; }
+
   .test-detail .inp { color:#e2e8f0; }
   .test-detail .exp { color:#34d399; }
   .test-detail .got { color:#f87171; }
 
+  /* ── code block ── */
   .code-label {
-    font-size      : 9px;
-    color          : #64748b;
-    letter-spacing : 2px;
-    text-transform : uppercase;
-    margin-bottom  : 6px;
+    font-size     : 9px;
+    color         : #64748b;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    margin-bottom : 6px;
   }
 
   .code-block {
-    background    : #050810;
-    border        : 1px solid #2a2d3e;
-    padding       : 12px;
-    font-size     : 10px;
-    line-height   : 1.7;
-    color         : #a78bfa;
-    max-height    : 160px;
-    overflow-y    : auto;
-    white-space   : pre;
-    margin-bottom : 10px;
+    background   : #050810;
+    border       : 1px solid #2a2d3e;
+    padding      : 12px;
+    font-size    : 10px;
+    line-height  : 1.7;
+    color        : #a78bfa;
+    max-height   : 150px;
+    overflow-y   : auto;
+    white-space  : pre;
+    margin-bottom: 10px;
   }
 
   /* ── action buttons ── */
-  .action-row { display:flex; gap:6px; margin-bottom:8px; }
+  .action-row {
+    display      : flex;
+    gap          : 6px;
+    margin-bottom: 8px;
+  }
 
   .action-btn {
-    flex           : 1;
-    padding        : 8px 4px;
-    border         : 1px solid;
-    background     : transparent;
-    font-family    : 'JetBrains Mono', monospace;
-    font-size      : 10px;
-    font-weight    : 700;
-    cursor         : pointer;
-    letter-spacing : 1px;
-    transition     : all 0.15s;
+    flex          : 1;
+    padding       : 8px 4px;
+    border        : 1px solid;
+    background    : transparent;
+    font-family   : 'JetBrains Mono', monospace;
+    font-size     : 10px;
+    font-weight   : 700;
+    cursor        : pointer;
+    letter-spacing: 1px;
+    transition    : all 0.15s;
   }
 
   .action-btn.copy  { border-color:#00d4ff; color:#00d4ff; }
@@ -286,133 +370,181 @@
   .action-btn.clear { border-color:#f87171; color:#f87171; }
   .action-btn.clear:hover { background:rgba(248,113,113,0.1); }
 
-  /* ── error display box ── */
-  .err-box      { display:none; background:rgba(248,113,113,0.06); border:1px solid rgba(248,113,113,0.3); padding:12px; font-size:10px; color:#f87171; line-height:1.6; margin-bottom:10px; }
-  .err-box.show { display:block; }
+  /* ── divider ── */
+  .divider { height:1px; background:#2a2d3e; margin:10px 0; }
+
+  /* ── github section ── */
+  .github-section { margin-top:8px; }
+
+  .push-btn {
+    width         : 100%;
+    padding       : 9px;
+    background    : transparent;
+    border        : 1px solid #34d399;
+    color         : #34d399;
+    font-family   : 'JetBrains Mono', monospace;
+    font-size     : 11px;
+    font-weight   : 700;
+    cursor        : pointer;
+    letter-spacing: 1px;
+    transition    : all 0.15s;
+    margin-bottom : 6px;
+  }
+
+  .push-btn:hover    { background:rgba(52,211,153,0.1); }
+  .push-btn:disabled { opacity:0.5; cursor:not-allowed; }
+
+  .push-status { display:none; font-size:10px; line-height:1.5; }
 
   /* ── toast ── */
   .toast {
-    position   : fixed;
-    bottom     : 16px;
-    left       : 50%;
-    transform  : translateX(-50%);
-    background : #34d399;
-    color      : #000;
-    font-size  : 10px;
-    font-weight: 700;
-    padding    : 6px 16px;
-    opacity    : 0;
-    transition : opacity 0.3s;
-    pointer-events: none;
+    position      : fixed;
+    bottom        : 16px;
+    left          : 50%;
+    transform     : translateX(-50%);
+    background    : #34d399;
+    color         : #000;
+    font-size     : 10px;
+    font-weight   : 700;
+    padding       : 6px 16px;
     letter-spacing: 1px;
+    opacity       : 0;
+    transition    : opacity 0.3s;
+    pointer-events: none;
+    white-space   : nowrap;
   }
 
   .toast.show { opacity:1; }
-  .divider    { height:1px; background:#2a2d3e; margin:12px 0; }
+
 </style>
 </head>
 <body>
 
-<!-- HEADER -->
-<div class="header">
-  <div class="header-left">
-    <span class="logo">⚡</span>
-    <span class="title">LEETCODE AI</span>
-  </div>
-  <div class="status-dot"></div>
-</div>
-
-<!-- NOT ON LEETCODE -->
-<div class="not-leetcode" id="notLeetcode" style="display:none;">
-  <div class="icon">🔒</div>
-  <p>Open a LeetCode problem page<br>to use this extension</p>
-</div>
-
-<!-- MAIN -->
-<div id="mainContent">
-
-  <!-- problem bar -->
-  <div class="problem-bar">
-    <div class="problem-title" id="problemTitle">Loading...</div>
-    <div class="problem-meta">
-      <span class="badge easy" id="diffBadge">Easy</span>
-      <span class="badge lang" id="langBadge">Python</span>
+  <!-- ══════════════════════════════════════════ -->
+  <!-- HEADER                                     -->
+  <!-- ══════════════════════════════════════════ -->
+  <div class="header">
+    <div class="header-left">
+      <span class="logo">⚡</span>
+      <span class="title">LEETCODE AI</span>
+    </div>
+    <div class="header-right">
+      <div class="status-dot"></div>
+      <button class="settings-btn" id="settingsBtn">⚙</button>
     </div>
   </div>
 
-  <div class="body">
+  <!-- ══════════════════════════════════════════ -->
+  <!-- NOT ON LEETCODE WARNING                    -->
+  <!-- ══════════════════════════════════════════ -->
+  <div class="not-leetcode" id="notLeetcode" style="display:none;">
+    <div class="icon">🔒</div>
+    <p>Open a LeetCode problem page<br>to use this extension</p>
+  </div>
 
-    <!-- language -->
-    <div class="label">Select Language</div>
-    <div class="lang-row">
-      <button class="lang-btn active" data-lang="python">Python</button>
-      <button class="lang-btn"       data-lang="javascript">JS</button>
-      <button class="lang-btn"       data-lang="java">Java</button>
+  <!-- ══════════════════════════════════════════ -->
+  <!-- MAIN CONTENT                               -->
+  <!-- ══════════════════════════════════════════ -->
+  <div id="mainContent">
+
+    <!-- problem bar -->
+    <div class="problem-bar">
+      <div class="problem-title" id="problemTitle">Loading...</div>
+      <div class="problem-meta">
+        <span class="badge easy" id="diffBadge">Easy</span>
+        <span class="badge lang" id="langBadge">Python</span>
+      </div>
     </div>
 
-    <!-- ✅ error paste section -->
-    <div class="error-section">
-      <button class="error-toggle" id="errorToggle">
-        ⚠️ Got an error from LeetCode? Paste it here →
-      </button>
-      <div class="error-paste" id="errorPaste">
-        <textarea
-          class="error-textarea"
-          id="errorInput"
-          placeholder="Paste LeetCode error / wrong answer here...
+    <div class="body">
+
+      <!-- language selector -->
+      <div class="label">Select Language</div>
+      <div class="lang-row">
+        <button class="lang-btn active" data-lang="python">Python</button>
+        <button class="lang-btn"        data-lang="javascript">JS</button>
+        <button class="lang-btn"        data-lang="java">Java</button>
+      </div>
+
+      <!-- error paste section -->
+      <div class="error-section">
+        <button class="error-toggle" id="errorToggle">
+          ⚠️ Got an error from LeetCode? Paste it here →
+        </button>
+        <div class="error-paste" id="errorPaste">
+          <textarea
+            class       = "error-textarea"
+            id          = "errorInput"
+            placeholder = "Paste LeetCode error / wrong answer here...
 e.g. Wrong Answer: expected [0,1] got [1,0]
 or: Time Limit Exceeded
 or: Runtime Error: list index out of range"
-        ></textarea>
-        <div class="error-hint">
-          AI will read this error and fix the solution
+          ></textarea>
+          <div class="error-hint">
+            AI will read this error and fix the solution
+          </div>
         </div>
       </div>
-    </div>
 
-    <!-- solve -->
-    <button class="solve-btn" id="solveBtn">
-      ▶ &nbsp; SOLVE THIS PROBLEM
-    </button>
+      <!-- solve button -->
+      <button class="solve-btn" id="solveBtn">
+        ▶ &nbsp; SOLVE THIS PROBLEM
+      </button>
 
-    <!-- loading -->
-    <div class="loading" id="loading">
-      <div class="spinner"></div>
-      <div class="loading-step" id="loadingStep">Fetching problem...</div>
-    </div>
-
-    <!-- error display -->
-    <div class="err-box" id="errorBox"></div>
-
-    <!-- results -->
-    <div class="results" id="results">
-
-      <div class="result-header">
-        <div class="result-status" id="resultStatus"></div>
-        <div class="attempts-badge" id="attemptsBadge"></div>
+      <!-- loading -->
+      <div class="loading" id="loading">
+        <div class="spinner"></div>
+        <div class="loading-step" id="loadingStep">Fetching problem...</div>
       </div>
 
-      <div class="tests" id="testsList"></div>
+      <!-- error display box -->
+      <div class="err-box" id="errorBox"></div>
 
-      <div class="divider"></div>
+      <!-- results -->
+      <div class="results" id="results">
 
-      <div class="code-label">Generated Code</div>
-      <div class="code-block" id="codeBlock"></div>
+        <!-- status + attempts -->
+        <div class="result-header">
+          <div class="result-status"  id="resultStatus"></div>
+          <div class="attempts-badge" id="attemptsBadge"></div>
+        </div>
 
-      <!-- ✅ 3 action buttons -->
-      <div class="action-row">
-        <button class="action-btn copy"  id="copyBtn">📋 Copy</button>
-        <button class="action-btn retry" id="retryBtn">🔁 Retry</button>
-        <button class="action-btn clear" id="clearBtn">🗑 Clear</button>
+        <!-- test cases -->
+        <div class="tests" id="testsList"></div>
+
+        <div class="divider"></div>
+
+        <!-- generated code -->
+        <div class="code-label">Generated Code</div>
+        <div class="code-block" id="codeBlock"></div>
+
+        <!-- copy / retry / clear -->
+        <div class="action-row">
+          <button class="action-btn copy"  id="copyBtn">📋 Copy</button>
+          <button class="action-btn retry" id="retryBtn">🔁 Retry</button>
+          <button class="action-btn clear" id="clearBtn">🗑 Clear</button>
+        </div>
+
+        <!-- github push -->
+        <div class="github-section" id="githubSection" style="display:none;">
+          <button class="push-btn" id="pushBtn">
+            🐙 Push to GitHub
+          </button>
+          <div class="push-status" id="pushStatus"></div>
+        </div>
+
       </div>
+      <!-- end results -->
 
     </div>
+    <!-- end body -->
+
   </div>
-</div>
+  <!-- end mainContent -->
 
-<!-- toast -->
-<div class="toast" id="toast"></div>
+  <!-- toast -->
+  <div class="toast" id="toast"></div>
 
-<script src="popup.js"></script>
+  <script src="popup.js"></script>
 </body>
 </html>

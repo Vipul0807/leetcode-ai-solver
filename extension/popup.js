@@ -27,28 +27,44 @@ document.addEventListener("DOMContentLoaded", async () => {
     return;
   }
 
-  // load saved language
   const saved = await chrome.storage.local.get("language");
   if (saved.language) {
     selectedLang = saved.language;
     updateLangButtons(selectedLang);
   }
 
-  // ✅ restore previous results — don't lose on close
   await restoreResults(currentUrl);
-
-  // load problem info
   await loadProblemInfo(currentUrl);
-
   setupListeners();
 });
+
+
+// ════════════════════════════════════════════════
+// HELPERS — URL + SLUG
+// ════════════════════════════════════════════════
+function extractSlug(url) {
+  try {
+    url = url.replace(/\/$/, "");
+    const afterProblems = url.split("/problems/")[1];
+    if (!afterProblems) return "unknown";
+    return afterProblems.split("/")[0] || "unknown";
+  } catch (e) {
+    return "unknown";
+  }
+}
+
+function getCleanUrl(url) {
+  const slug = extractSlug(url);
+  return `https://leetcode.com/problems/${slug}/`;
+}
 
 
 // ════════════════════════════════════════════════
 // SAVE RESULTS
 // ════════════════════════════════════════════════
 async function saveResults(url, data) {
-  const key = "result_" + btoa(url).slice(0, 40);
+  const cleanUrl = getCleanUrl(url);
+  const key      = "result_" + btoa(cleanUrl).slice(0, 40);
   await chrome.storage.local.set({ [key]: data });
 }
 
@@ -58,8 +74,9 @@ async function saveResults(url, data) {
 // ════════════════════════════════════════════════
 async function restoreResults(url) {
   try {
-    const key  = "result_" + btoa(url).slice(0, 40);
-    const data = await chrome.storage.local.get(key);
+    const cleanUrl = getCleanUrl(url);
+    const key      = "result_" + btoa(cleanUrl).slice(0, 40);
+    const data     = await chrome.storage.local.get(key);
     if (data[key]) {
       currentCode = data[key].code;
       renderResults(data[key]);
@@ -84,9 +101,9 @@ async function loadProblemInfo(url) {
     if (info?.title) {
       document.getElementById("problemTitle").textContent = info.title;
 
-      const diffBadge       = document.getElementById("diffBadge");
-      diffBadge.textContent  = info.difficulty || "Unknown";
-      diffBadge.className    = `badge ${info.difficulty?.toLowerCase() || "easy"}`;
+      const diffBadge      = document.getElementById("diffBadge");
+      diffBadge.textContent = info.difficulty || "Unknown";
+      diffBadge.className   = `badge ${info.difficulty?.toLowerCase() || "easy"}`;
 
       if (info.language) {
         selectedLang = info.language;
@@ -97,7 +114,7 @@ async function loadProblemInfo(url) {
     }
 
   } catch (e) {
-    const slug  = url.split("/problems/")[1]?.replace(/\/$/, "") || "";
+    const slug  = extractSlug(url);
     const title = slug.split("-")
       .map(w => w.charAt(0).toUpperCase() + w.slice(1))
       .join(" ");
@@ -116,51 +133,87 @@ function setupListeners() {
     btn.addEventListener("click", () => {
       selectedLang = btn.dataset.lang;
       updateLangButtons(selectedLang);
-      document.getElementById("langBadge").textContent =
-        selectedLang.charAt(0).toUpperCase() + selectedLang.slice(1);
+      const langBadge = document.getElementById("langBadge");
+      if (langBadge) {
+        langBadge.textContent =
+          selectedLang.charAt(0).toUpperCase() + selectedLang.slice(1);
+      }
       chrome.storage.local.set({ language: selectedLang });
     });
   });
 
-  // ✅ error toggle
-  document.getElementById("errorToggle").addEventListener("click", () => {
-    const paste   = document.getElementById("errorPaste");
-    const toggle  = document.getElementById("errorToggle");
-    const isShown = paste.classList.contains("show");
-    paste.classList.toggle("show",  !isShown);
-    toggle.classList.toggle("active", !isShown);
-  });
+  // error toggle
+  const errorToggle = document.getElementById("errorToggle");
+  if (errorToggle) {
+    errorToggle.addEventListener("click", () => {
+      const paste   = document.getElementById("errorPaste");
+      const isShown = paste.classList.contains("show");
+      paste.classList.toggle("show",         !isShown);
+      errorToggle.classList.toggle("active", !isShown);
+    });
+  }
 
   // solve
-  document.getElementById("solveBtn").addEventListener("click", solve);
+  const solveBtn = document.getElementById("solveBtn");
+  if (solveBtn) solveBtn.addEventListener("click", solve);
 
   // copy
-  document.getElementById("copyBtn").addEventListener("click", () => {
-    if (!currentCode) return;
-    navigator.clipboard.writeText(currentCode);
-    showToast("✅ Code copied!");
-  });
+  const copyBtn = document.getElementById("copyBtn");
+  if (copyBtn) {
+    copyBtn.addEventListener("click", () => {
+      if (!currentCode) return;
+      navigator.clipboard.writeText(currentCode);
+      showToast("✅ Code copied!");
+    });
+  }
 
-  // ✅ retry — keeps error input, resolves again
-  document.getElementById("retryBtn").addEventListener("click", () => {
-    const key = "result_" + btoa(currentUrl).slice(0, 40);
-    chrome.storage.local.remove(key);
-    showResults(false);
-    showError("");
-    solve();
-  });
+  // retry
+  const retryBtn = document.getElementById("retryBtn");
+  if (retryBtn) {
+    retryBtn.addEventListener("click", () => {
+      const cleanUrl = getCleanUrl(currentUrl);
+      const key      = "result_" + btoa(cleanUrl).slice(0, 40);
+      chrome.storage.local.remove(key);
+      showResults(false);
+      showError("");
+      solve();
+    });
+  }
 
-  // ✅ clear — full reset
-  document.getElementById("clearBtn").addEventListener("click", () => {
-    const key = "result_" + btoa(currentUrl).slice(0, 40);
-    chrome.storage.local.remove(key);
-    showResults(false);
-    showError("");
-    currentCode = "";
-    document.getElementById("errorInput").value = "";
-    document.getElementById("errorPaste").classList.remove("show");
-    document.getElementById("errorToggle").classList.remove("active");
-  });
+  // clear
+  const clearBtn = document.getElementById("clearBtn");
+  if (clearBtn) {
+    clearBtn.addEventListener("click", () => {
+      const cleanUrl = getCleanUrl(currentUrl);
+      const key      = "result_" + btoa(cleanUrl).slice(0, 40);
+      chrome.storage.local.remove(key);
+      showResults(false);
+      showError("");
+      currentCode = "";
+      const errorInput  = document.getElementById("errorInput");
+      const errorPaste  = document.getElementById("errorPaste");
+      const errorToggle = document.getElementById("errorToggle");
+      if (errorInput)  errorInput.value = "";
+      if (errorPaste)  errorPaste.classList.remove("show");
+      if (errorToggle) errorToggle.classList.remove("active");
+    });
+  }
+
+  // settings
+  const settingsBtn = document.getElementById("settingsBtn");
+  if (settingsBtn) {
+    settingsBtn.addEventListener("click", () => {
+      chrome.tabs.create({
+        url: chrome.runtime.getURL("settings.html")
+      });
+    });
+  }
+
+  // push
+  const pushBtn = document.getElementById("pushBtn");
+  if (pushBtn) {
+    pushBtn.addEventListener("click", pushToGitHub);
+  }
 }
 
 
@@ -178,6 +231,15 @@ function updateLangButtons(lang) {
 // SOLVE
 // ════════════════════════════════════════════════
 async function solve() {
+
+  const [tab] = await chrome.tabs.query({
+    active       : true,
+    currentWindow: true
+  });
+
+  currentUrl     = tab.url || currentUrl;
+  const slug     = extractSlug(currentUrl);
+  const cleanUrl = `https://leetcode.com/problems/${slug}/`;
 
   showLoading(true);
   showResults(false);
@@ -197,17 +259,16 @@ async function solve() {
   }, 2000);
 
   try {
-
-    // ✅ read pasted error if any
-    const userError = document.getElementById("errorInput").value.trim();
+    const errorInput = document.getElementById("errorInput");
+    const userError  = errorInput ? errorInput.value.trim() : "";
 
     const res = await fetch(`${API_BASE}/solve`, {
       method  : "POST",
       headers : { "Content-Type": "application/json" },
       body    : JSON.stringify({
-        url        : currentUrl,
+        url        : cleanUrl,
         language   : selectedLang,
-        user_error : userError       // ✅ send to backend
+        user_error : userError
       })
     });
 
@@ -221,8 +282,7 @@ async function solve() {
     const data  = await res.json();
     currentCode = data.code;
 
-    // ✅ save so popup close doesn't lose results
-    await saveResults(currentUrl, data);
+    await saveResults(cleanUrl, data);
 
     showLoading(false);
     renderResults(data);
@@ -231,6 +291,133 @@ async function solve() {
     clearInterval(stepInterval);
     showLoading(false);
     showError(`❌ ${e.message}`);
+  }
+}
+
+
+// ════════════════════════════════════════════════
+// PUSH TO GITHUB
+// ════════════════════════════════════════════════
+async function pushToGitHub() {
+  console.log("🐙 pushToGitHub called");
+
+  const btn = document.getElementById("pushBtn");
+  if (btn) {
+    btn.textContent = "⏳ Pushing...";
+    btn.disabled    = true;
+  }
+
+  try {
+    const settings = await chrome.storage.local.get([
+      "githubToken",
+      "githubUsername"
+    ]);
+
+    if (!settings.githubToken || !settings.githubUsername) {
+      showPushStatus("❌ Setup GitHub first — click ⚙ Settings", "err");
+      if (btn) { btn.textContent = "🐙 Push to GitHub"; btn.disabled = false; }
+      return;
+    }
+
+    const cleanUrl = getCleanUrl(currentUrl);
+    const key      = "result_" + btoa(cleanUrl).slice(0, 40);
+    const data     = await chrome.storage.local.get(key);
+    const result   = data[key];
+
+    if (!result) {
+      showPushStatus("❌ No solution found — solve first", "err");
+      if (btn) { btn.textContent = "🐙 Push to GitHub"; btn.disabled = false; }
+      return;
+    }
+
+    const slug = extractSlug(currentUrl);
+
+    let difficulty = "Unknown";
+    try {
+      const info = await chrome.tabs.sendMessage(
+        currentTab.id,
+        { type: "GET_PROBLEM_INFO" }
+      );
+      difficulty = info?.difficulty || "Unknown";
+    } catch (e) {}
+
+    const payload = {
+      token       : settings.githubToken,
+      username    : settings.githubUsername,
+      slug        : slug,
+      title       : result.title       || slug,
+      difficulty  : difficulty,
+      description : "",
+      examples    : result.test_results || [],
+      code        : result.code,
+      language    : result.language     || "python",
+      attempts    : result.attempts     || 0
+    };
+
+    const res = await fetch(`${API_BASE}/push`, {
+      method  : "POST",
+      headers : { "Content-Type": "application/json" },
+      body    : JSON.stringify(payload)
+    });
+
+    const pushResult = await res.json();
+
+    if (res.ok && pushResult.success) {
+      showPushStatus(`✅ Pushed! → ${pushResult.url}`, "ok");
+      if (btn) btn.textContent = "✅ Pushed!";
+    } else {
+      throw new Error(pushResult.detail || "Push failed");
+    }
+
+  } catch (e) {
+    showPushStatus(`❌ ${e.message}`, "err");
+    const btn = document.getElementById("pushBtn");
+    if (btn) { btn.textContent = "🐙 Push to GitHub"; btn.disabled = false; }
+  }
+}
+
+
+// ════════════════════════════════════════════════
+// SHOW PUSH STATUS
+// ════════════════════════════════════════════════
+function showPushStatus(msg, type) {
+  const el = document.getElementById("pushStatus");
+  if (!el) return;
+
+  el.textContent   = msg;
+  el.style.display = "block";
+  el.style.padding = "6px 10px";
+  el.style.marginTop = "6px";
+
+  if (type === "ok") {
+    el.style.background = "rgba(52,211,153,0.08)";
+    el.style.border     = "1px solid rgba(52,211,153,0.3)";
+    el.style.color      = "#34d399";
+  } else {
+    el.style.background = "rgba(248,113,113,0.08)";
+    el.style.border     = "1px solid rgba(248,113,113,0.3)";
+    el.style.color      = "#f87171";
+  }
+}
+
+
+// ════════════════════════════════════════════════
+// CHECK GITHUB SETUP
+// ════════════════════════════════════════════════
+async function checkGithubSetup() {
+  const data = await chrome.storage.local.get([
+    "githubVerified",
+    "githubUsername",
+    "githubToken"
+  ]);
+
+  const githubSection = document.getElementById("githubSection");
+  if (!githubSection) return;
+
+  if (data.githubVerified && data.githubUsername && data.githubToken) {
+    githubSection.style.display = "block";
+  } else {
+    githubSection.style.display = "none";
   }
 }
 
@@ -277,6 +464,7 @@ function renderResults(data) {
   document.getElementById("codeBlock").textContent = data.code;
 
   showResults(true);
+  checkGithubSetup();
 }
 
 
@@ -284,22 +472,27 @@ function renderResults(data) {
 // UI HELPERS
 // ════════════════════════════════════════════════
 function showLoading(show) {
-  document.getElementById("loading").classList.toggle("show", show);
-  document.getElementById("solveBtn").disabled = show;
+  const loading  = document.getElementById("loading");
+  const solveBtn = document.getElementById("solveBtn");
+  if (loading)  loading.classList.toggle("show", show);
+  if (solveBtn) solveBtn.disabled = show;
 }
 
 function showResults(show) {
-  document.getElementById("results").classList.toggle("show", show);
+  const results = document.getElementById("results");
+  if (results) results.classList.toggle("show", show);
 }
 
 function showError(msg) {
-  const box       = document.getElementById("errorBox");
+  const box = document.getElementById("errorBox");
+  if (!box) return;
   box.textContent = msg;
   box.classList.toggle("show", !!msg);
 }
 
 function showToast(msg) {
-  const toast       = document.getElementById("toast");
+  const toast = document.getElementById("toast");
+  if (!toast) return;
   toast.textContent = msg;
   toast.classList.add("show");
   setTimeout(() => toast.classList.remove("show"), 2000);

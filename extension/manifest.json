@@ -7,12 +7,14 @@
   "permissions": [
     "activeTab",
     "scripting",
-    "storage"
+    "storage",
+    "tabs"
   ],
 
   "host_permissions": [
     "https://leetcode.com/*",
-    "http://localhost:8000/*"
+    "http://localhost:8000/*",
+    "https://api.github.com/*"
   ],
 
   "action": {
